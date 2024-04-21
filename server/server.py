@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 from bottle import route, run, template, request, response
 import subprocess, base64, qrcode
-from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa
+from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_hidden_contents
 
 private_key_file = './authorityCert/certauthority.key.pem'
 public_key_file = './authorityCert/certauthority.publickey.pem'
 signature_file = './temp/signature.bin'
 data_file = './temp/infos.txt'
+tsr_file = './temp/timestamp.tsr'
+tsq_file = './temp/timestamp.tsq'
 
 @route('/creation', method='POST')
 def création_attestation():
@@ -27,7 +29,12 @@ def création_attestation():
 
     #generation du qr code contenant la signature
     qrcode_maker(b64_signature)
+    #this function will generate a timestamp and save it in the temp folder
     get_timestamp_from_tsa()
+
+    #just for testing
+    #test_data = build_hidden_content(data_file, tsr_file, tsq_file)
+    #retrieve_hidden_contents(test_data)
 
     
     # test de verification de la signature

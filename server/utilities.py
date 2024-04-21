@@ -53,6 +53,7 @@ def qrcode_maker(b64_signature):
     qr.save("./temp/qrcode.png", scale=5)
     print("QR Code enregistré dans le repertoire temp")
 
+
 # Fonction pour générer un timestamp à partir d'un serveur TSA
 def get_timestamp_from_tsa():
 
@@ -74,5 +75,54 @@ def get_timestamp_from_tsa():
     
     print("Timestamp généré et enregistré dans le repertoire temp")
 
-    
 
+def build_hidden_content(data_etudiant, timestamp_response, timestamp_query):
+    # Lire les fichiers
+    contenu_concatene = ''
+    with open(data_etudiant, 'r') as file:
+        data = file.read()
+        # on fait le bourrage
+        if len(data) < 64:
+            data = '*' * (64 - len(data)) + data
+
+        contenu_concatene += data + '|'
+    
+    with open(timestamp_response, 'rb') as file:
+        tsr = file.read()
+        tsr = base64.b64encode(tsr)
+        tsr = tsr.decode('utf-8')
+        contenu_concatene += tsr + '|'
+    
+    with open(timestamp_query, 'rb') as file:
+        tsq = file.read()
+        tsq = base64.b64encode(tsq)
+        tsq = tsq.decode('utf-8')
+        contenu_concatene += tsq
+    #print(contenu_concatene)
+    print(len(contenu_concatene))
+    return contenu_concatene
+
+def retrieve_hidden_contents(data):
+    # Lire les fichiers
+    data = data.split('|')
+    if len(data) != 3:
+        return None
+    
+    #eliminer les caracteres de bourrage
+    infosEtu = data[0].replace('*', '')
+    tsr_data = bytes(data[1],"utf-8")
+    tsr_data = base64.b64decode(tsr_data)
+    #save tsr_data to file
+    with open('./temp/timestamp_retrieved.tsr', 'wb') as file:
+        file.write(tsr_data)
+
+    tsq_data = bytes(data[2],"utf-8")
+    tsq_data = base64.b64decode(tsq_data)
+    #save tsq_data to file
+    with open('./temp/timestamp_retrieved.tsq', 'wb') as file:
+        file.write(tsq_data)
+
+    #print(infosEtu)
+    #print(len(data))
+    
+    return (infosEtu, tsr_data, tsq_data)
