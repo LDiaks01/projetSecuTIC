@@ -1,6 +1,6 @@
 import subprocess
 import subprocess
-import base64
+import base64, qrcode
 
 def signer_donnees(nom_prenom, formation):
 
@@ -46,3 +46,9 @@ def verifier_signature(public_key_file, signature_file, data_file):
     except subprocess.CalledProcessError as e:
         print("Erreur lors de la vérification de la signature avec OpenSSL:", e)
         return False
+
+def qrcode_maker(b64_signature):
+    #generation du qr code contenant la signature
+    qr = qrcode.make(b64_signature)
+    qr.save("./temp/qrcode.png", scale=5)
+    print("QR Code enregistré dans le repertoire temp")
