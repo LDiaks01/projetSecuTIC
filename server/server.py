@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from bottle import route, run, template, request, response
 import subprocess, base64, qrcode
-from utilities import signer_donnees, verifier_signature, qrcode_maker
+from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa
 
 private_key_file = './authorityCert/certauthority.key.pem'
 public_key_file = './authorityCert/certauthority.publickey.pem'
@@ -27,6 +27,8 @@ def création_attestation():
 
     #generation du qr code contenant la signature
     qrcode_maker(b64_signature)
+    get_timestamp_from_tsa()
+
     
     # test de verification de la signature
     # verified = verifier_signature(public_key_file, signature_file, data_file)

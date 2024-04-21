@@ -1,6 +1,6 @@
 import subprocess
 import subprocess
-import base64, qrcode
+import base64, qrcode, datetime
 
 def signer_donnees(nom_prenom, formation):
 
@@ -52,3 +52,27 @@ def qrcode_maker(b64_signature):
     qr = qrcode.make(b64_signature)
     qr.save("./temp/qrcode.png", scale=5)
     print("QR Code enregistré dans le repertoire temp")
+
+# Fonction pour générer un timestamp à partir d'un serveur TSA
+def get_timestamp_from_tsa():
+
+    time = datetime.datetime.now()
+    try:
+        time_file = open('./temp/time.txt', 'w')
+        time_file.write(str(time))
+        time_file.close()
+
+        #generer le timestamp request
+        subprocess.run(['openssl', 'ts', '-query', '-data', './temp/time.txt', '-no_nonce', '-sha512',  '-out',  './temp/timestamp.tsq'])
+        #envoyer la requete au serveur TSA
+        #getCert= ['curl', '-H', 'Content-Type: application/timestamp-query', '--data-binary', '@./temp/timestamp.tsq', 'https://freetsa.org/tsr', '>', './temp/timestamp.tsr']
+        getCert= ['curl','-H','Content-Type: application/timestamp-query','--data-binary','@./temp/timestamp.tsq','https://freetsa.org/tsr','-o','./temp/timestamp.tsr']
+        subprocess.run(getCert)
+
+    except Exception as e:
+        print("Erreur lors de la génération du timestamp request:", e)
+    
+    print("Timestamp généré et enregistré dans le repertoire temp")
+
+    
+
