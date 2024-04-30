@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from bottle import route, run, template, request, response
 import subprocess, base64, qrcode
-from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_hidden_contents
+from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_from_hidden_contents, build_certificate, extract_hidden_data
 
 private_key_file = './authorityCert/certauthority.key.pem'
 public_key_file = './authorityCert/certauthority.publickey.pem'
@@ -9,6 +9,7 @@ signature_file = './temp/signature.bin'
 data_file = './temp/infos.txt'
 tsr_file = './temp/timestamp.tsr'
 tsq_file = './temp/timestamp.tsq'
+finalAttestationPath = "./temp/attestation_final.png"
 
 @route('/creation', method='POST')
 def création_attestation():
@@ -32,18 +33,24 @@ def création_attestation():
     #this function will generate a timestamp and save it in the temp folder
     get_timestamp_from_tsa()
 
-    #just for testing
-    #test_data = build_hidden_content(data_file, tsr_file, tsq_file)
-    #retrieve_hidden_contents(test_data)
+    #generating hidden content
+    hidden_data = build_hidden_content(data_file, tsr_file, tsq_file)
 
     
     # test de verification de la signature
-    # verified = verifier_signature(public_key_file, signature_file, data_file)
+    verified = verifier_signature(public_key_file, signature_file, data_file)
+
+    response_image = build_certificate(contenu_identité, contenu_intitulé_certification, hidden_data)
+
+    retieved_datas = extract_hidden_data(finalAttestationPath)
+    retrieve_from_hidden_contents(retieved_datas)
+
+    # renvoyer l'image en reponse
+    response.set_header('Content-type', 'image/png')
+    return response_image
     
     print('nom prénom :', contenu_identité, ' intitulé de la certification :',
             contenu_intitulé_certification)
-    response.set_header('Content-type', 'text/plain')
-    return "ok!"
 
 
 @route('/verification', method='POST')

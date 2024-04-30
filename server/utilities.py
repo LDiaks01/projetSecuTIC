@@ -1,6 +1,7 @@
 import subprocess
 import subprocess
-import base64, qrcode, datetime
+import base64, qrcode, datetime, stegano
+from PIL import Image
 
 def signer_donnees(nom_prenom, formation):
 
@@ -50,7 +51,7 @@ def verifier_signature(public_key_file, signature_file, data_file):
 def qrcode_maker(b64_signature):
     #generation du qr code contenant la signature
     qr = qrcode.make(b64_signature)
-    qr.save("./temp/qrcode.png", scale=5)
+    qr.save("./temp/qrcode.png", scale=2)
     print("QR Code enregistré dans le repertoire temp")
 
 
@@ -102,7 +103,7 @@ def build_hidden_content(data_etudiant, timestamp_response, timestamp_query):
     print(len(contenu_concatene))
     return contenu_concatene
 
-def retrieve_hidden_contents(data):
+def retrieve_from_hidden_contents(data):
     # Lire les fichiers
     data = data.split('|')
     if len(data) != 3:
@@ -124,5 +125,62 @@ def retrieve_hidden_contents(data):
 
     #print(infosEtu)
     #print(len(data))
+    print("Voici les données cachées dans l'image :")
+    print("Informations de l'étudiant :", infosEtu)
+    #print("Timestamp Response :", tsr_data)
+    #print("Timestamp Query :", tsq_data)
     
     return (infosEtu, tsr_data, tsq_data)
+
+def build_certificate(nom_prenom, formation, data_to_hide):
+    #chemin du label à générer
+    labelAttestationPath = "./temp/label.png"
+    fondAttestationPath = "./assets/fond_attestation.png"
+    combinaisonPath = "./temp/combinaison.png"
+    qrcodePath = "./temp/qrcode.png"
+    attestationPath = "./temp/attestation.png"
+    finalAttestationPath = "./temp/attestation_final.png"
+
+    #Génération du texte à 
+    texte_ligne = formation+" \ndélivré\nà\n" + nom_prenom
+    #Generation du label au format png
+    #subprocess.run("curl -o "+labelAttestationPath+" 'http://chart.apis.google.com/chart' --data-urlencode 'chst=d_text_outline' --data-urlencode 'chld=000000|56|h|FFFFFF|b|%s'"%texte_ligne,shell=True)
+    subprocess.run("convert -size 1000x600 -gravity center -pointsize 56 label:" + "\""+ texte_ligne + "\"" +" -transparent white " +labelAttestationPath,shell=True)
+    #Redimensionnement avec ImageMagick
+    subprocess.run("mogrify -resize 1000x600 "+labelAttestationPath,shell=True)
+
+    #Combinaison des images en l'image finale avec ImageMagick
+    subprocess.run("composite -gravity center "+labelAttestationPath+" " + fondAttestationPath +" " +combinaisonPath,shell=True)
+
+    #Ajout du QR Code dans l'image finale
+    #on resize le qrcode 210x210
+    subprocess.run("mogrify -resize 210x210 "+qrcodePath,shell=True)
+    subprocess.run("composite -geometry +1418+934 "+qrcodePath+" "+combinaisonPath+" "+attestationPath, shell=True)
+
+    imageAttestation = Image.open(attestationPath)
+    #cacher les données dans l'image
+    stegano.cacher(imageAttestation, data_to_hide)
+    #sauvegarder l'image
+    imageAttestation.save(finalAttestationPath)
+    print("Attestation générée avec succès")
+
+    #renvoyer l'attestation, pas le chemin
+    with open(finalAttestationPath, 'rb') as file:
+        return file.read()
+
+# Fonction pour extraire les données cachées dans une image
+# la taille est la taille du message caché, fixe de 2034
+def extract_hidden_data(image_path, taille=2034):
+    image = Image.open(image_path)
+    return stegano.recuperer(image, taille)
+
+
+# Fonction pour vider les fichiers temporaires
+def clear_temp_files():
+    subprocess.run(['rm', '-f', './temp/*'], shell=True)
+    
+    
+
+
+        
+
