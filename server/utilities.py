@@ -1,6 +1,6 @@
 import subprocess
 import subprocess
-import base64, qrcode, datetime, stegano
+import base64, qrcode, datetime, stegano, zbarlight
 from PIL import Image
 
 def signer_donnees(nom_prenom, formation):
@@ -111,6 +111,10 @@ def retrieve_from_hidden_contents(data):
     
     #eliminer les caracteres de bourrage
     infosEtu = data[0].replace('*', '')
+    #save infosEtu to file
+    with open('./temp/infos_retrieved.txt', 'w') as file:
+        file.write(infosEtu)
+
     tsr_data = bytes(data[1],"utf-8")
     tsr_data = base64.b64decode(tsr_data)
     #save tsr_data to file
@@ -180,7 +184,39 @@ def clear_temp_files():
     subprocess.run(['rm', '-f', './temp/*'], shell=True)
     
     
+# Fonction pour recuperer le qrcode à partir de l'image
+def retrieve_qrcode(image_path):
+    image = Image.open(image_path)
+    qrImage = image.crop((1418,934,1418+210,934+210))
+    data = zbarlight.scan_codes(['qrcode'], qrImage)
+    #b64 decode from data
+    #print(base64.b64decode(data[0]))
+    return base64.b64decode(data[0])
+    
 
+# Fonction pour verifier le timestamp
+def verify_timestamp(tsaCAfile, tsaCRTfile, tsr_file, tsq_file):
+    # Avec cette commande: openssl ts -verify -in file.tsr -queryfile file.tsq -CAfile cacert.pem -untrusted tsa.crt
+    
+    try:
+        # Commande openssl pour vérifier la signature
+        openssl_cmd = ['openssl', 'ts', '-verify', '-in', tsr_file, '-queryfile', tsq_file, '-CAfile', tsaCAfile, '-untrusted', tsaCRTfile]
+        openssl_process = subprocess.Popen(openssl_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        openssl_output, openssl_error = openssl_process.communicate()
 
+        #print(openssl_output.decode())
+        if openssl_error:
+            # Ignorer le message "Using configuration from /usr/lib/ssl/openssl.cnf"
+            if b"Using configuration from /usr/lib/ssl/openssl.cnf" not in openssl_error:
+                # Afficher d'autres erreurs éventuelles
+                print("Erreur OpenSSL :", openssl_error.decode())
+                return False
+    
+        # Vérifier si la signature est valide
+        return b'Verification: OK' in openssl_output
         
+
+    except subprocess.CalledProcessError as e:
+        print("Erreur lors de la vérification de la signature avec OpenSSL:", e)
+        return False
 
