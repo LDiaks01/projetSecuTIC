@@ -30,7 +30,7 @@ def création_attestation():
 
     #creation des fichiers infos.txt et signature.bin
     fichier_infos = open(data_file, 'w')
-    fichier_infos.write(contenu_identité + contenu_intitulé_certification)
+    fichier_infos.write(contenu_identité + "_" + contenu_intitulé_certification)
     fichier_infos.close()
     #creation de la signature
     signature = signer_donnees(contenu_identité, contenu_intitulé_certification)
@@ -81,7 +81,6 @@ def vérification_attestation():
     #on verifie la signature
     verified = verifier_signature(public_key_file, signature_retrieved, infos_retrieved)
     return_string = ''
-    
     if verified:
         return_string = "Signature vérifiée"
     else:
@@ -93,10 +92,21 @@ def vérification_attestation():
     else:
         return_string += " Timestamp non vérifié"
 
+    #read the infos_retrieved.txt file
+    nom_prenom = ''
+    intitule_certif = ''
+    with open(infos_retrieved, 'r') as file:
+        data = file.read()
+        data = data.split('_')
+        print(data)
+        nom_prenom = data[0]
+        intitule_certif = data[1]
+
     if verified and verified2:
-        return "Attestation valide\n"
+        
+        return f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n Attestation valide\n"
     else:
-        return return_string + "\n"
+        return f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n" + return_string + "\n"
         
     
 

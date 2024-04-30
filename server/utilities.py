@@ -6,7 +6,7 @@ from PIL import Image
 def signer_donnees(nom_prenom, formation):
 
     # Concaténer les données
-    donnees = nom_prenom + formation
+    donnees = nom_prenom + "_" +formation
 
     # Appeler OpenSSL pour signer les données
     openssl_command = [
