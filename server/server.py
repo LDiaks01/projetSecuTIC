@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from bottle import route, run, template, request, response, abort
 import subprocess, base64, qrcode, zbarlight
-from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_from_hidden_contents, build_certificate, extract_hidden_data, retrieve_qrcode, verify_timestamp, clear_temp_files
+from utilities import make_temp_dir, signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_from_hidden_contents, build_certificate, extract_hidden_data, retrieve_qrcode, verify_timestamp, clear_temp_files
 from PIL import UnidentifiedImageError
 
 private_key_file = './authorityCert/certauthority.key.pem'
@@ -29,7 +29,7 @@ def création_attestation():
     print("Création d'une nouvelle attestation")
     contenu_identité = request.forms.get('identite')
     contenu_intitulé_certification = request.forms.get('intitule_certif')
-
+    make_temp_dir()
     #creation des fichiers infos.txt et signature.bin
     fichier_infos = open(data_file, 'w')
     fichier_infos.write(contenu_identité + "_" + contenu_intitulé_certification)
@@ -69,6 +69,7 @@ def création_attestation():
 def vérification_attestation():
     print("____________________________________________________________")
     print("Vérification d'une attestation")
+    make_temp_dir()
     response.set_header('Content-type', 'text/plain')
     try:
         contenu_image = request.files.get('image')
@@ -110,7 +111,8 @@ def vérification_attestation():
             nom_prenom = data[0]
             intitule_certif = data[1]
 
-
+        #clear temp files
+        clear_temp_files()
         # verified (signature) and verified2 (timestamp) are booleans
         if verified and verified2:
             print(f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n Attestation valide")
@@ -122,8 +124,6 @@ def vérification_attestation():
             print("____________________________________________________________")
             return f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n" + return_string + "\n"
         
-        #clear temp files
-        clear_temp_files()
 
     except UnidentifiedImageError as e:
         print("Erreur lors de la vérification de l'attestation : ", e)

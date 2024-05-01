@@ -29,7 +29,7 @@ ___________________________COMMANDES DIRECTES_____________________________
 
 3. - Finalement dans un nouveau terminal, positionnez vous à la racine du projet et réaliser une requete sur le serveur frontal pour créer une attestation par exemple.
 ```bash
-    curl -v -X POST -d identite=Lansana DIAKITE -d intitule_certif=ETH --cacert certauthority.cert.pem https://localhost:9000/ --output certificat.png
+    curl -v -X POST -d identite=Lansana DIAKITE -d intitule_certif=ETH --cacert certauthority.cert.pem https://localhost:9000/creation --output certificat.png
 ```
 
 4. - POur verifier une attestation

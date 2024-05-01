@@ -180,10 +180,15 @@ def extract_hidden_data(image_path, taille=2034):
     image = Image.open(image_path)
     return stegano.recuperer(image, taille)
 
+# Fonction pour créer un répertoire temporaire
+def make_temp_dir():
+    # Créer le répertoire temporaire s'il ne existe pas
+    subprocess.run("mkdir ./temp", shell=True)
 
 # Fonction pour vider les fichiers temporaires
 def clear_temp_files():
-    subprocess.run(['rm', '-f', './temp/*'], shell=True)
+    # Supprimer les fichiers temporaires
+    subprocess.run("rm -f ./temp/*", shell=True)
     
     
 # Fonction pour recuperer le qrcode à partir de l'image
