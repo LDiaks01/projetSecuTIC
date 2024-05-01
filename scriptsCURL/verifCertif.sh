@@ -15,7 +15,7 @@ fi
 
 # Envoi de la requête POST pour la vérification du certificat avec curl et affichage de la réponse
 echo "Envoi de la requête de vérification du certificat... En attente de la réponse du serveur."
-response=$(curl -v -F "image=@$certificat_path" http://localhost:8080/verification 2>&1)
+response=$(curl -v -F "image=@$certificat_path" --cacert ./authorityCert/certauthority.cert.pem https://localhost:9000/verification 2>&1)
 
 # Affichage de la réponse de la requête curl
 echo "$response"

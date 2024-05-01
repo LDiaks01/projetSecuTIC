@@ -10,8 +10,7 @@ nom=$(echo "$nom_prenom" | cut -d' ' -f1)
 prenom=$(echo "$nom_prenom" | cut -d' ' -f2-)
 echo "Generation en cours.."
 # Envoi de la requête POST avec curl
-curl -X POST -d "identite=$prenom $nom" -d "intitule_certif=$intitule_certif" http://localhost:8080/creation --output certificat.png
-
+curl -X POST -d "identite=$prenom $nom" -d "intitule_certif=$intitule_certif" --cacert ./authorityCert/certauthority.cert.pem https://localhost:9000/creation --output certificat.png
 # Vérification du statut de la requête
 if [ $? -ne 0 ]; then
     echo "La requête curl a échoué."

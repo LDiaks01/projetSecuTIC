@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from bottle import route, run, template, request, response, abort
 import subprocess, base64, qrcode, zbarlight
-from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_from_hidden_contents, build_certificate, extract_hidden_data, retrieve_qrcode, verify_timestamp
+from utilities import signer_donnees, verifier_signature, qrcode_maker, get_timestamp_from_tsa, build_hidden_content, retrieve_from_hidden_contents, build_certificate, extract_hidden_data, retrieve_qrcode, verify_timestamp, clear_temp_files
 from PIL import UnidentifiedImageError
 
 private_key_file = './authorityCert/certauthority.key.pem'
@@ -59,6 +59,8 @@ def création_attestation():
     print("____________________________________________________________")
     response.set_header('Content-type', 'image/png')
     retrieve_qrcode(finalAttestationPath)
+    #clear_temp_files()
+    clear_temp_files()
     return response_image
 
 
@@ -119,6 +121,9 @@ def vérification_attestation():
             print(f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n Attestation invalide")
             print("____________________________________________________________")
             return f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n" + return_string + "\n"
+        
+        #clear temp files
+        clear_temp_files()
 
     except UnidentifiedImageError as e:
         print("Erreur lors de la vérification de l'attestation : ", e)
