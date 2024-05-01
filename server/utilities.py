@@ -1,7 +1,7 @@
 import subprocess
 import subprocess
 import base64, qrcode, datetime, stegano, zbarlight
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 def signer_donnees(nom_prenom, formation):
 
