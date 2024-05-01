@@ -38,7 +38,7 @@ def création_attestation():
     fichier_signature.write(signature)
     fichier_signature.close()
     b64_signature = base64.b64encode(signature)
-    print(f"Signature : {b64_signature}")
+    #print(f"Signature : {b64_signature}")
 
     #generation du qr code contenant la signature
     qrcode_maker(b64_signature)
@@ -64,7 +64,6 @@ def création_attestation():
 def vérification_attestation():
     contenu_image = request.files.get('image')
     contenu_image.save('./temp/attestation_a_verifier.png',overwrite=True)
-    response.set_header('Content-type', 'text/plain')
 
     #On recupere le code qr et la signature à l'interieur
     signature_bin = retrieve_qrcode(attestationToVerify)
@@ -102,6 +101,9 @@ def vérification_attestation():
         nom_prenom = data[0]
         intitule_certif = data[1]
 
+    response.set_header('Content-type', 'text/plain')
+
+    # verified (signature) and verified2 (timestamp) are booleans
     if verified and verified2:
         
         return f"Nom et prénom : {nom_prenom} \n Intitulé de la certification : {intitule_certif}\n Attestation valide\n"

@@ -9,6 +9,7 @@ def signer_donnees(nom_prenom, formation):
     donnees = nom_prenom + "_" +formation
 
     # Appeler OpenSSL pour signer les données
+    # openssl dgst -sha256 -sign certauthority.key.pem -out signature.bin infos.txt
     openssl_command = [
         'openssl', 'dgst', '-sha256', '-sign', './authorityCert/certauthority.key.pem'
     ]
@@ -23,6 +24,9 @@ def signer_donnees(nom_prenom, formation):
     # Retourner la signature encodée en base64 (ASCII)
     return signature
 
+# public_key_file: chemin du fichier de clé publique de Certifplus
+# signature_file: chemin du fichier de signature (données du qrcode)
+# data_file: chemin du fichier de données (nom_prenom_formation)
 def verifier_signature(public_key_file, signature_file, data_file):
     try:
         # Commande openssl pour vérifier la signature
@@ -36,7 +40,7 @@ def verifier_signature(public_key_file, signature_file, data_file):
         ]
         openssl_process = subprocess.Popen(openssl_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         openssl_output, openssl_error = openssl_process.communicate()
-        print(openssl_output.decode())
+        #print(openssl_output.decode())
         if openssl_error:
             print("Erreur OpenSSL :", openssl_error.decode())
             return False
@@ -52,7 +56,7 @@ def qrcode_maker(b64_signature):
     #generation du qr code contenant la signature
     qr = qrcode.make(b64_signature)
     qr.save("./temp/qrcode.png", scale=2)
-    print("QR Code enregistré dans le repertoire temp")
+    print("QR Code géneré et enregistré dans le repertoire temp")
 
 
 # Fonction pour générer un timestamp à partir d'un serveur TSA
@@ -127,10 +131,9 @@ def retrieve_from_hidden_contents(data):
     with open('./temp/timestamp_retrieved.tsq', 'wb') as file:
         file.write(tsq_data)
 
-    #print(infosEtu)
     #print(len(data))
-    print("Voici les données cachées dans l'image :")
-    print("Informations de l'étudiant :", infosEtu)
+    #print("Voici les données cachées dans l'image :")
+    #print("Informations de l'étudiant :", infosEtu)
     #print("Timestamp Response :", tsr_data)
     #print("Timestamp Query :", tsq_data)
     
@@ -148,7 +151,6 @@ def build_certificate(nom_prenom, formation, data_to_hide):
     #Génération du texte à 
     texte_ligne = formation+" \ndélivré\nà\n" + nom_prenom
     #Generation du label au format png
-    #subprocess.run("curl -o "+labelAttestationPath+" 'http://chart.apis.google.com/chart' --data-urlencode 'chst=d_text_outline' --data-urlencode 'chld=000000|56|h|FFFFFF|b|%s'"%texte_ligne,shell=True)
     subprocess.run("convert -size 1000x600 -gravity center -pointsize 56 label:" + "\""+ texte_ligne + "\"" +" -transparent white " +labelAttestationPath,shell=True)
     #Redimensionnement avec ImageMagick
     subprocess.run("mogrify -resize 1000x600 "+labelAttestationPath,shell=True)
@@ -197,7 +199,6 @@ def retrieve_qrcode(image_path):
 # Fonction pour verifier le timestamp
 def verify_timestamp(tsaCAfile, tsaCRTfile, tsr_file, tsq_file):
     # Avec cette commande: openssl ts -verify -in file.tsr -queryfile file.tsq -CAfile cacert.pem -untrusted tsa.crt
-    
     try:
         # Commande openssl pour vérifier la signature
         openssl_cmd = ['openssl', 'ts', '-verify', '-in', tsr_file, '-queryfile', tsq_file, '-CAfile', tsaCAfile, '-untrusted', tsaCRTfile]
@@ -214,8 +215,6 @@ def verify_timestamp(tsaCAfile, tsaCRTfile, tsr_file, tsq_file):
     
         # Vérifier si la signature est valide
         return b'Verification: OK' in openssl_output
-        
-
     except subprocess.CalledProcessError as e:
         print("Erreur lors de la vérification de la signature avec OpenSSL:", e)
         return False
