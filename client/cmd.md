@@ -1,7 +1,9 @@
 #== Commandes pour utiliser le serveur
 
 1 - Dans un terminal,positionnez vous à la RACINE du projet
+
 2 - Créez un dossier nommé temp $mkdir temp
+
 3 - Dans un nouveau terminal, positionnez vous à la racine du projet et lancer le serveur python
 $python3 server/server.py
 
